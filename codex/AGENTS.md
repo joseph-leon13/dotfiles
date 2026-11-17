@@ -17,84 +17,59 @@ auto-regenerate the way DIGEST.md does.
 
 ## Digest
 
-### Personal
+_Load-bearing principles only. Full rule bodies live next to this file._
 
-**approach** — INTJ-T style — directness, depth over surface, real
-trade-offs. Challenge bad ideas with reasoning, never silently agree.
-Research before implementing; understand who calls a file before changing
-it. Full: `~/dotfiles/claude/rules/personal/approach.md`
+## personal
 
-**bug-class-enumeration** — For any bug consult framed as "fix THIS
-instance", first output must be a bug-class enumeration: abstract the class,
-list ALL known code paths, mark each BROKEN/SAFE/UNKNOWN. Then design fixes
-that close the CLASS, not the instance — a chokepoint (bug unrepresentable
-by construction) beats an arm (patches the paths visible now). Full:
-`~/dotfiles/claude/rules/personal/bug-class-enumeration.md`
+**approach** — INTJ-T style — directness, depth over surface, real trade-offs. Challenge bad ideas with reasoning, never silently agree. Research before implementing; understand who calls a file before changing it.
 
-**workflow** — Format every file you modify (Prettier/Black) — never bypass
-pre-commit hooks. Workflow: research → fact-check docs → plan with detail →
-implement → verify. Full: `~/dotfiles/claude/rules/personal/workflow.md`
+**behavioral-rule-promotion** — When a behavioral discipline rule keeps being violated (observed ≥2 times),
+promote it to STRUCTURAL via the 3-layer template: role-doc section +
+Themis hint (severity=warn) + lint test guarding the role-doc text.
+Layers are promoted IN ORDER, each stamped by a non-author with evidence
+it works before the next starts (see Stamped promotion sequence).
+Behavioral rules drift; structural rules don't.
 
-**orchestration** — Default to decomposing and orchestrating substantive,
-parallelizable work via subagents from the first turn — don't wait to be told
-to "parallelize" or "spawn agents." Fan out independent slices concurrently,
-serialize shared-file work, keep the adversarial-verify layer. Subagents
-propose/implement; you keep every load-bearing decision. Full:
-`~/dotfiles/claude/rules/personal/orchestration.md`
+**bug-class-enumeration** — For any bug consult framed as "fix THIS instance", the architect's FIRST output must
+be a bug-class enumeration: abstract the class, list ALL known code paths, mark each
+BROKEN/SAFE/UNKNOWN. "Close the class" means install the CHOKEPOINT — one mandatory path
++ a bypass-gate that makes the bug unrepresentable — NOT patch every known path (that's an
+"arm"; the class reopens on the next path). Root-fix test: "can new code still create this
+bug?" Yes → arm, physically-no → chokepoint. A SECOND failed close is a signal about the
+APPROACH, not a reason to try harder inside it. Master requests enumeration first; reviews
+verify class coverage, not just the diff.
 
-**khimaira-tools** — For conceptual codebase queries on khimaira/jeevy, try
-`seance_semantic_search` before grep, and `notebook_ask` for a code-grounded
-narrative answer (the mnemosyne oracle was retired 2026-07-24 — it went stale
-faster than it could re-bake). For any UI change, verify it rendered (Specter-
-equivalent — Codex has no browser-CDP tool yet; screenshot/manual check
-instead). Full: `~/dotfiles/claude/rules/personal/khimaira-tools.md`
+**khimaira-tools** — For conceptual codebase queries, try `seance_semantic_search` BEFORE grep; for a code-grounded narrative "what does X do / how does Y work" answer, `notebook_ask` (it cites the live code and flags stale notes). For ANY UI change (verify it rendered) or browser-visible bug (debug it), use `specter_debug_snapshot` — Specter is a verify tool, not just a debug tool; `tsc passing` ≠ "the user sees what I think they see." For "map this feature / what does it export" questions, call `scarlet_scan_features` or `scarlet_extract_feature_metadata`. For meeting recording / transcription, the `sibyl_*` tools. Reflexive grep loses information these tools have already indexed.
 
-### Engineering
+**orchestration** — Default to decomposing and orchestrating substantive, parallelizable work via
+subagents from the first turn — don't wait to be told to "parallelize" or
+"spawn agents." Fan out independent slices concurrently, serialize shared-file
+work, keep the adversarial-verify layer. Subagents propose/implement; you
+keep every load-bearing decision.
 
-**conventions** — Match existing patterns first. camelCase frontend (except
-React PascalCase, module CONSTANTS); PEP 8 + Black backend. Names must
-reflect what they do — no `data`, `result`, `temp`. Delete dead code the
-moment it's confirmed dead.
+**workflow** — Format every file you modify (Prettier/Black) — never bypass pre-commit hooks. Workflow: research → fact-check docs → plan with detail → implement → verify. Keep `~/.claude/rules/`, `~/.cursor/rules/`, and `~/.codex/AGENTS.md` in sync.
 
-**error-handling** — Never swallow errors silently — log, re-throw, or
-handle explicitly. Fail fast and loud. Include context (path, ID, operation)
-in messages. Backend uses `{error: {code, message, details}}` envelope; map
-exceptions → HTTP status explicitly.
+## engineering
 
-**security** — No secrets in code, ever — env vars or secrets manager only.
-Validate at every system boundary. Parameterized queries always; never
-interpolate user input into SQL. Enforce auth at the API layer, not the UI.
+**ai-engineering** — The LLM is a bounded perception component, not the system. Cross the boundary once — unstructured → structured → code — and never let the model past it: it turns messy input into a validated schema; every load-bearing decision on that structured data is deterministic code. Resolve/match deterministic-first (exact → algorithmic fuzzy → LLM residual, human-gated). Propose, don't dispose.
 
-**testing** — Tests catch regressions and document behavior. Test behavior
-not implementation. Always cover the unhappy path. Deterministic only — no
-flaky tests. High coverage on critical paths; don't chase 100%.
+**api-design** — REST with plural-noun resources and proper HTTP verbs. URL-versioned (`/api/v1/`). Consistent `{data, meta}` envelope. Paginate everything (cursor for large/realtime, offset for small/stable). ISO 8601 UTC timestamps; UUIDs in public surface.
 
-**debugging** — Reproduce first — without a reliable repro you can't verify
-the fix. Read the actual error, trace data flow, isolate the layer, form a
-hypothesis, test it, fix the root cause (not the symptom), add a test.
+**conventions** — Match existing patterns first. camelCase frontend (except React PascalCase, module CONSTANTS); PEP 8 + Black backend. Names must reflect what they do — no `data`, `result`, `temp`. Delete dead code the moment it's confirmed dead.
 
-**performance** — Measure first, optimize second. No blocking I/O in async
-handlers. Paginate list endpoints. Index columns used in WHERE/JOIN/ORDER BY.
-Cache deliberately — stale cache is worse than no cache.
+**database** — Never edit existing migrations — create a new one. Parameterized queries only. snake_case tables/columns. Index WHERE/JOIN/ORDER BY columns. Foreign-key constraints + NOT NULL by default. Row-level security for multi-tenant.
 
-**database** — Never edit existing migrations — create a new one.
-Parameterized queries only. snake_case tables/columns. Foreign-key
-constraints + NOT NULL by default.
+**debugging** — Reproduce first — without a reliable repro you can't verify the fix. Read the actual error, trace data flow, isolate the layer, form a hypothesis, test it, fix the root cause (not the symptom), add a test. Don't shotgun-debug.
 
-**api-design** — REST with plural-noun resources and proper HTTP verbs.
-URL-versioned (`/api/v1/`). Consistent `{data, meta}` envelope. Paginate
-everything.
+**dependencies** — Check if existing packages cover the need before adding. Evaluate maintenance + downloads + license + bundle size. Pin exact versions; commit lockfiles. Run `npm audit` / `pip audit` regularly. Clean up config + types when removing a dep.
 
-**dependencies** — Check if existing packages cover the need before adding.
-Evaluate maintenance + downloads + license + bundle size. Pin exact
-versions; commit lockfiles.
+**error-handling** — Never swallow errors silently — log, re-throw, or handle explicitly. Fail fast and loud. Include context (path, ID, operation) in messages. Backend uses `{error: {code, message, details}}` envelope; map exceptions → HTTP status explicitly.
 
-**ai-engineering** — The LLM is a bounded perception component, not the
-system. Cross the boundary once — unstructured → structured → code — never
-let the model past it. Resolve/match deterministic-first. Propose, don't
-dispose.
+**performance** — Measure first, optimize second. No blocking I/O in async handlers. Lazy-load on frontend; watch for N+1 queries. Index columns used in WHERE/JOIN/ORDER BY. Paginate all list endpoints. Cache deliberately — stale cache is worse than no cache.
 
-Full engineering rule bodies: `~/dotfiles/claude/rules/engineering/*.md`
+**security** — No secrets in code, ever — env vars or secrets manager only. Validate at every system boundary. Parameterized queries always; never interpolate user input into SQL. Enforce auth at the API layer, not the UI.
+
+**testing** — Tests catch regressions and document behavior. Test behavior not implementation. Always cover the unhappy path. Deterministic only — no flaky tests. High coverage on critical paths; don't chase 100%.
 
 ## Codex-specific notes (not in the Claude Code digest)
 

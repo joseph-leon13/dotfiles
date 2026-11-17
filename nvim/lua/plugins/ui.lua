@@ -9,7 +9,7 @@ return {
         section_separators = "",
       },
       sections = {
-        lualine_a = { { "mode", color = { bg = "#1e4a60", fg = "#e5e5ea", gui = "bold" } } },
+        lualine_a = { { "mode", color = { bg = "#324C55", fg = "#FFFFFF", gui = "bold" } } },
       },
     },
   },

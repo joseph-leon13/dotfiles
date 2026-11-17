@@ -1,0 +1,1 @@
+/home/_3ntropy/dev/khimaira/packages/khimaira/src/khimaira/_commands/khimaira-codex.md

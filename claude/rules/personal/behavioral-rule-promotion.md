@@ -5,8 +5,9 @@
 When a behavioral discipline rule keeps being violated (observed ≥2 times),
 promote it to STRUCTURAL via the 3-layer template: role-doc section +
 Themis hint (severity=warn) + lint test guarding the role-doc text.
-Behavioral rules drift; structural rules don't. Observed across 6+ gaps
-in the 2026-05-25/2026-05-26 session.
+Layers are promoted IN ORDER, each stamped by a non-author with evidence
+it works before the next starts (see Stamped promotion sequence).
+Behavioral rules drift; structural rules don't.
 
 ## Why this exists
 
@@ -36,6 +37,44 @@ For each behavioral rule worth promoting:
 3. **Lint test** (`packages/khimaira/tests/test_role_convention_lint.py`)
    — asserts the role-doc text + Themis rule are present. Catches silent
    regression (someone edits the doc and accidentally removes the rule).
+
+## Stamped promotion sequence
+
+The three structural layers are dependent and must be promoted in order. Do
+not start a later layer until the preceding layer has a recorded stamp
+carrying evidence that the layer works.
+
+0. **L0 — decision table.** For every candidate behavior, state which layers
+   are tractable, which are declined, and why. The task owner stamps scope
+   before any layer is built.
+1. **L1 — role documentation.** Write the trigger condition, correct
+   behavior, and a worked failure from the observed incident. An independent
+   reviewer reads the exact text and stamps that it describes the intended
+   behavior before enforcement begins.
+2. **L2 — Themis.** Where detection is structurally tractable, prove the rule
+   in both directions: it fires on violating calls and stays silent on
+   legitimate calls. Report the probe score and every false positive or
+   escape honestly. An independent reviewer stamps the probe evidence before
+   lint is added.
+3. **L3 — lint.** Add the convention-preservation test, then mutation-prove
+   it by deleting the load-bearing role-doc sentence, observing the test
+   fail, and restoring the sentence. An independent reviewer stamps the
+   mutation evidence.
+
+The author of a layer cannot stamp it. If work is interrupted, stamped layers
+remain complete; unstamped work remains held and must not be represented as
+certified. A report that text/code was added is not a stamp — every stamp
+records evidence at that layer's decision boundary.
+
+Why the gates exist: the layers are causally dependent — L3 asserts L1's
+text, and L2's message states the behavior L1 describes — so a wrong L1
+propagates into L2/L3 and gets cemented by the very lint that was meant to
+guard it. Stamping at each boundary catches the error at its cheapest point.
+(Added 2026-08-03 after the F1-16 deploy-gate incident: a gate test shipped
+twice with a wrong foundational claim, each time self-certified as a bundle;
+five independent gate rounds were needed to unwind it. Authored by the
+codex-27 promotion task; stamped by an independent reviewer per this same
+sequence — L0 by the task owner, L1 by a seat that authored none of it.)
 
 ## Examples observed (2026-05-25 / 2026-05-26)
 

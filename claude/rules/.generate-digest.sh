@@ -38,8 +38,14 @@ missing=()
     for f in "$RULES_DIR/$category"/*.md; do
       [ -f "$f" ] || continue
       name=$(basename "$f" .md)
-      # Extract `## TL;DR` section (until the next `## ` header)
-      tldr=$(awk '/^## TL;DR$/{flag=1;next}/^## /{flag=0}flag' "$f" | sed '/^$/d')
+      # Extract only the FIRST `## TL;DR` section. Some rule bodies contain
+      # examples that show the literal heading again; treating those examples
+      # as another source section polluted the generated digest.
+      tldr=$(awk '
+        /^## TL;DR$/ && !seen {seen=1; flag=1; next}
+        flag && /^## / {exit}
+        flag {print}
+      ' "$f" | sed '/^$/d')
 
       if [ -z "$tldr" ]; then
         missing+=("$category/$name.md")

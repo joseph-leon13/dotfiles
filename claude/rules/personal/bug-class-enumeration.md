@@ -7,7 +7,8 @@ be a bug-class enumeration: abstract the class, list ALL known code paths, mark 
 BROKEN/SAFE/UNKNOWN. "Close the class" means install the CHOKEPOINT — one mandatory path
 + a bypass-gate that makes the bug unrepresentable — NOT patch every known path (that's an
 "arm"; the class reopens on the next path). Root-fix test: "can new code still create this
-bug?" Yes → arm, physically-no → chokepoint. Master requests enumeration first; reviews
+bug?" Yes → arm, physically-no → chokepoint. A SECOND failed close is a signal about the
+APPROACH, not a reason to try harder inside it. Master requests enumeration first; reviews
 verify class coverage, not just the diff.
 
 ## Why this exists
@@ -87,6 +88,53 @@ rots — someone adds path #2 months later and the class silently reopens. The g
 lint/CI check that fails on any operation outside the chokepoint) makes closure permanent;
 it's cheaper than the chokepoint and does most of the work. Never ship a chokepoint without
 one.
+
+## The prior question: chokepoint-hunting inside the WRONG FOUNDATION still fails
+
+The arm-vs-chokepoint test above assumes the approach you are working in is *capable* of
+closing the class. **Sometimes it is not, and then every chokepoint attempt inside it leaks
+in a new dimension — which reads exactly like a run of arms and is not one.**
+
+**The distinguishing signature:** each round genuinely closes the dimension it targeted, by
+construction, and a *different* dimension appears. That is not sloppiness and it is not a
+too-narrow fix — it is the approach's domain being unbounded on an axis nobody enumerated,
+because the axes themselves are unbounded.
+
+⇒ **A SECOND failed attempt at closing a class is a signal about the APPROACH, not a reason
+to try harder inside it.** Before authorizing attempt #3, answer:
+
+> **Can this approach, in principle, establish what the fix needs to establish?**
+> If answering it requires modelling an unbounded domain (shell semantics, natural language,
+> an open option grammar, another system's future flags), the answer is NO and no amount of
+> narrowing will change it.
+
+When the answer is NO, the moves are: **make the right thing the only easy thing** (a
+chokepoint that removes the alternative, rather than a gate that detects the bypass); **fix
+the artifact that misleads** rather than policing everyone who reads it; **deliver the
+constraint BEFORE the decision** rather than warning after it; or **decline the mechanism
+and keep the discipline behavioral**, which is a complete answer, not a failure.
+
+**Worked example (2026-08-03).** A rule meant to catch "you inferred daemon state from the
+wrong host" was built by parsing shell commands. Round 1: 7 defects, patched. Round 2: 5
+more, patched. Round 3 replaced marker-enumeration with genuine positive establishment — the
+correct chokepoint move — and *did* close endpoint classification and the systemctl grammar
+by construction. Round 4 then surfaced two fresh dimensions: shell control flow (`false &&
+cmd` warned though the command provably never ran) and option grammars (`cat --help path`
+warned though nothing was read). **The chokepoint move was right and still lost, because
+"decide what this command string will do" cannot be established without being a shell.**
+Four dimensions, each closed properly, each revealing the next.
+
+The master running it had quoted the arm/chokepoint rule at two agents that same night and
+still authorized round 4 — applying "what one path should all of these have gone through?"
+*inside* the approach and never *about* it. **The user had to raise the level-up question.**
+Both real incidents the rule targeted were plain, unconditional, no-option commands; every
+exotic form driving the rounds had been invented while probing. That is its own tell: **when
+the failing cases are ones you constructed rather than ones you observed, you are hardening
+against a threat model you invented.**
+
+**Cheap check before attempt #3:** list the dimensions each prior round closed. If they are
+*independent* rather than nested, the approach is enumerating a space, and the next round
+will find dimension N+1.
 
 **Retrofit reality (don't over-read this):** you do NOT chokepoint a whole existing codebase
 — that's a rewrite trading battle-tested edge-case handling for theoretical cleanliness.

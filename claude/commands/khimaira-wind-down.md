@@ -37,11 +37,35 @@ Brings all in-flight work to a clean stop, posts a handoff, sets the wind-down s
    ═══ KEY CONTEXT ═══
    [Non-obvious things next session needs to know]
    ```
+   This handoff text IS the wind-down receipt `roster stop` checks for (2026-08-01) — no
+   separate marker needed. It qualifies because it is scope_cwd-scoped and posted fresh
+   by this step; `roster stop` looks for a recent handoff whose body contains the literal
+   string `WIND-DOWN CHECKPOINT`.
+
+4b. Capture durable roster knowledge into the graph, NOT just this session's text handoff
+    (2026-08-01 — do not skip this: the previous version of this command never did it, and
+    a whole roster-memory feature — CAPTURED_IN edges, notebook_link, traversal — went
+    unused for weeks as a result. This step is what makes it actually get used):
+   - Create ONE hub note in the notebook for this wind-down, scoped to the project. Title
+     it plainly, e.g. "Roster wind-down — <project> — <date>".
+   - Identify the durable notes this roster created or substantively advanced this session
+     (check session_recent_decisions and notebook_search for notes touched today).
+   - Link each to the hub note: notebook_link(from_note_id=<hub>, to_note_id=<note>,
+     type="CAPTURED_IN"). Do not invent relationships between the linked notes themselves
+     — CAPTURED_IN only says "this hub captured this note," nothing more.
+   - Confirm it actually landed: kg_subgraph(node_id="note:<hub_id>", hops=1) should show
+     the edges you just created. If it doesn't, something failed silently — say so in the
+     confirmation printed in step 6, don't just assume it worked.
+   - If there is genuinely nothing durable to capture (a short session, pure firefighting),
+     skip this and say so explicitly in step 6's confirmation — an explicit "nothing to
+     capture" is fine; a silent skip is what caused the original gap.
 
 5. Broadcast to roster chat:
    "🌙 Wind-down active. Sentinel set — Guard-4/Guard-5 suppressed overnight. Handoff posted for tomorrow's session. Everyone stand down."
 
-6. Print confirmation: handoff_id, sentinel status, list of sessions standing down.
+6. Print confirmation: handoff_id, sentinel status, list of sessions standing down, and
+   the outcome of step 4b — hub note id + edge count, or an explicit "nothing captured
+   this session" if you skipped it. Never omit this line silently.
 
 ## When NOT to use
 - Mid-task when an agent is in the middle of a critical operation (wait for a clean checkpoint)

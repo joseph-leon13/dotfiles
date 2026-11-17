@@ -50,8 +50,7 @@ args = ["-lc", "uv --directory {source_path} run ai-orchestrator-graph 2>>/tmp/o
 scope = "global"
 transport = "stdio"
 launcher = "bash"
-args = ["-lc", "npx -y mcp-remote https://mcp.linear.app/mcp"]
-env = { LINEAR_API_KEY = "${LINEAR_API_KEY}" }
+args = ["-lc", "npx -y mcp-remote https://mcp.linear.app/mcp --header \"Authorization: Bearer ${KHIMAIRA_LINEAR_API_KEY}\""]
 
 # ── Project-scoped MCP servers ────────────────────────────────────────────────
 

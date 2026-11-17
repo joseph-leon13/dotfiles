@@ -14,3 +14,10 @@ venv/
 dist/
 build/
 *.egg-info/
+
+# Local backup copies (git history keeps old versions)
+*.bak
+*.before-*
+
+# Machine-specific generated kitty session snapshots
+kitty/sessions/

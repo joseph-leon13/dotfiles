@@ -275,10 +275,13 @@ only — other sessions (bare `agent-1` etc.) are ignored. Title defaults to
      Your session_id is in the `🆔 khimaira session_id` block at the top of your context. Pass it to chat_my_chats every turn.
      After calling chat_my_chats: read recent chat history for a `📋 CONTEXT UPDATE v1` — that is your project context. If none exists, ask master to post one (lean roster: master is the front door, no intake seat; legacy roster: notice intake). Do NOT begin implementation without it.
 
-     CHANNEL REMINDER (now that real-time is active):
-     `chat_send` → real-time delivery to all chat members. Use for anything time-sensitive.
-     `session_post_notice` → turn-gated, lands on next prompted turn. Use for async FYIs only.
-     Default: when in doubt, use `chat_send`.
+     CHANNEL REMINDER (now that real-time is active) — DIRECTED IS THE DEFAULT:
+     `chat_send_to(chat_id=<chat_id>, to=["<name>"], body=...)` → DIRECTED. Wakes the named target AND records a durable obligation, so the work survives a wake that gets suppressed. Use for ANYTHING someone must act on: consult deliverables, gate verdicts, task results, questions, replies.
+     `chat_send` → UNDIRECTED broadcast. Live delivery to the room, plus — in a HIERARCHICAL roster — a ONE-SHOT auto-wake of an idle master (`#71`, chats.py). No durable obligation and NO retry. Correct for CONTEXT UPDATE, BEGIN, and status broadcasts.
+     `session_post_notice` → turn-gated, lands on next prompted turn. Async FYIs only.
+     Default for a DELIVERABLE: `chat_send_to`, naming the recipient. Not because undirected fails to wake — it does wake a master — but because the undirected wake is one-shot: if it is suppressed (target mid-turn, cooldown), nothing re-arms it, and a directed send leaves owed-state that survives.
+     DO NOT read this as "broadcasts don't wake." They do, for masters, in hierarchical rooms. The reason to direct a deliverable is DURABILITY, not delivery.
+     Recorded 2026-07-29 because a master (me) got this wrong while diagnosing it: I read the older prose, concluded an undirected deliverable had stranded a roster, and was about to write "broadcasts wake nobody" into six role docs. The journal showed the master woken 34s later by `#71` and the work proceeding. The prose was stale, not the mechanism — and prose about wake semantics goes stale every time the wake code moves, which it has three times this month. Verify against `send_message` in chats.py before trusting any description of this, including this one.
 
      Question routing: route questions to MASTER first (lean roster — master is the front door; no intake seat). Master resolves or escalates. Use `chat_send_to(chat_id=<chat_id>, to=["<master-name>"], body="<question>")`. (Legacy roster with an intake seat: route to intake instead.)
      Standby.
